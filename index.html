@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f5f1e7" />
+    <meta
+      name="description"
+      content="Uma pausa para descobrir: um jogo casual de palavras em português."
+    />
+    <title>Entre Letras — uma pausa para descobrir</title>
+  </head>
+  <body>
+    <div class="page">
+      <header class="masthead">
+        <a class="brand" href="/" aria-label="Entre Letras, início">
+          <span class="brand-mark" aria-hidden="true">é</span>
+          <span>
+            <span class="brand-name">entre letras</span>
+            <span class="brand-tag">um jogo de observação</span>
+          </span>
+        </a>
+        <div class="header-meta">
+          <span>Português do Brasil</span>
+          <span class="local-badge" id="storage-label">sem cadastro · neste dispositivo</span>
+        </div>
+      </header>
+
+      <section class="intro" aria-labelledby="page-title">
+        <div>
+          <div class="eyebrow">Uma pausa, uma palavra</div>
+          <h1 id="page-title">Siga as pistas.<br />Encontre o caminho.</h1>
+          <p>
+            Uma palavra de cinco letras, seis tentativas e nenhuma pressa.
+            Cada resposta vira uma pequena pista para a próxima.
+          </p>
+        </div>
+        <div class="intro-actions">
+          <div class="round-pill" id="round-label">RODADA <span>01</span> <span aria-hidden="true">·</span> livre</div>
+          <button type="button" class="help-btn" id="help-btn" aria-haspopup="dialog" aria-controls="help-dialog">Como jogar?</button>
+        </div>
+      </section>
+
+      <main class="layout">
+        <section class="game-card" aria-labelledby="game-heading">
+          <div class="game-top">
+            <h2 class="game-title" id="game-heading">Sua trilha de letras</h2>
+            <div class="attempt-count" aria-live="off">
+              <strong id="attempt-number">0</strong> de 6 pistas usadas
+            </div>
+          </div>
+          <div
+            class="board"
+            id="board"
+            role="table"
+            aria-label="Tabuleiro de seis tentativas e cinco letras por tentativa"
+          ></div>
+          <div class="progress-line">
+            <span id="progress-label">Sua primeira pista começa aqui</span>
+            <span class="progress-track" aria-hidden="true"><span id="progress-fill"></span></span>
+          </div>
+          <div class="entry-row">
+            <button type="button" class="undo-btn" id="erase-btn" aria-label="Apagar uma letra">Apagar</button>
+            <button type="button" class="submit-btn" id="submit-btn">
+              Enviar tentativa <span aria-hidden="true">↗</span>
+            </button>
+          </div>
+          <div class="status" id="status" role="status" aria-live="polite" aria-atomic="true">
+            Digite uma palavra para começar.
+          </div>
+          <div class="keypad" id="keypad" role="group" aria-label="Teclado virtual"></div>
+          <p class="keyboard-hint">Use o teclado do dispositivo ou toque nas letras. Enter envia · ⌫ apaga.</p>
+          <div class="share-area" id="share-area" hidden>
+            <button type="button" class="secondary-btn" id="share-btn">Copiar resultado</button>
+            <label class="share-fallback-label" for="share-text" id="share-label" hidden>
+              Cópia automática indisponível. Selecione e copie o resultado:
+            </label>
+            <textarea id="share-text" class="share-fallback" rows="5" readonly hidden></textarea>
+          </div>
+        </section>
+
+        <aside class="side-stack" aria-label="Guia e informações da rodada">
+          <section class="side-card clues-card" aria-labelledby="clues-title">
+            <h2 id="clues-title">Leia as pistas</h2>
+            <p class="side-intro">Cada marca conta uma parte da história. Cor e símbolo sempre andam juntos.</p>
+            <div class="clue-list">
+              <div class="clue">
+                <span class="clue-icon exact" aria-hidden="true">✓</span>
+                <div><strong>No lugar certo</strong><small>A letra existe e já encontrou sua posição.</small></div>
+              </div>
+              <div class="clue">
+                <span class="clue-icon present" aria-hidden="true">↗</span>
+                <div><strong>Em outro lugar</strong><small>A letra existe, mas tente outra posição.</small></div>
+              </div>
+              <div class="clue">
+                <span class="clue-icon absent" aria-hidden="true">×</span>
+                <div><strong>Não aparece</strong><small>Essa letra não faz parte da palavra.</small></div>
+              </div>
+            </div>
+            <div class="clue-sample" aria-label="Exemplo de leitura: L está no lugar certo, A aparece em outro lugar, M não aparece">
+              <div class="sample-caption">UM EXEMPLO DE LEITURA</div>
+              <div class="sample-line" aria-hidden="true">
+                <span class="sample-letter exact">L ✓</span>
+                <span class="sample-letter present">A ↗</span>
+                <span class="sample-letter absent">M ×</span>
+              </div>
+            </div>
+          </section>
+          <section class="side-card" aria-labelledby="mode-title">
+            <div class="mode-head"><h2 id="mode-title">Ritmo da rodada</h2><span aria-hidden="true">⌁</span></div>
+            <p class="mode-note" id="mode-description">Normal: use as pistas no seu tempo. A escolha vale para a próxima rodada.</p>
+            <div class="mode-options" role="group" aria-label="Dificuldade da próxima rodada">
+              <button type="button" class="mode-btn" id="normal-btn" aria-pressed="true">Normal</button>
+              <button type="button" class="mode-btn" id="hard-btn" aria-pressed="false">Difícil</button>
+            </div>
+          </section>
+          <section class="side-card stats-card" aria-labelledby="stats-title">
+            <div class="stats-heading"><h2 id="stats-title">Seu caderno</h2><span class="stats-caption">guardado aqui</span></div>
+            <div class="stats">
+              <div class="stat"><strong id="games-stat">0</strong><small>rodadas</small></div>
+              <div class="stat"><strong id="wins-stat">0</strong><small>descobertas</small></div>
+              <div class="stat"><strong id="streak-stat">0</strong><small>em sequência</small></div>
+            </div>
+            <div class="history-label">Descobertas por tentativa</div>
+            <div class="history-bars" id="history-bars" aria-label="Distribuição de vitórias por tentativa"></div>
+          </section>
+        </aside>
+      </main>
+
+      <footer class="bottom-strip">
+        <div class="bottom-copy">
+          <span class="bottom-icon" aria-hidden="true">↻</span>
+          <div>
+            <strong>Achou a palavra? A próxima já está à espera.</strong>
+            <small>Rodadas sem cronômetro · estatísticas e histórico guardados neste dispositivo.</small>
+          </div>
+        </div>
+        <button type="button" class="new-round-btn" id="new-round-btn" disabled>
+          Nova rodada <span aria-hidden="true">→</span>
+        </button>
+      </footer>
+    </div>
+    <dialog class="help-dialog" id="help-dialog" aria-labelledby="help-title">
+      <div class="help-dialog-head">
+        <h2 id="help-title">Como jogar</h2>
+        <button type="button" class="dialog-close" id="help-close" aria-label="Fechar instruções">×</button>
+      </div>
+      <p>Descubra a palavra de cinco letras em até seis tentativas. Digite uma palavra válida e envie para receber uma pista por letra.</p>
+      <ul>
+        <li><strong>✓ No lugar certo:</strong> a letra faz parte da palavra e está na posição correta.</li>
+        <li><strong>↗ Em outro lugar:</strong> a letra aparece na palavra, mas em outra posição.</li>
+        <li><strong>× Não aparece:</strong> a letra não faz parte da resposta.</li>
+      </ul>
+      <p>Acentos não alteram a comparação. Use o teclado da tela ou o teclado físico; Enter envia e Backspace apaga. No modo difícil, siga as pistas reveladas.</p>
+    </dialog>
+    <script type="module" src="/src/app.js"></script>
+  </body>
+</html>

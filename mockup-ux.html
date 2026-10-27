@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f1e7">
+  <title>Entre Letras — uma pausa para descobrir</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #f5f1e7;
+      --paper-deep: #ebe5d7;
+      --ink: #202e32;
+      --muted: #687477;
+      --line: #d9d3c6;
+      --white: #fffdf8;
+      --teal: #126b67;
+      --teal-soft: #dcece5;
+      --gold: #d4a63a;
+      --gold-soft: #f7ebc9;
+      --coral: #bd6149;
+      --coral-soft: #f2ded6;
+      --shadow: 0 12px 34px #24363212;
+      font-family: "Segoe UI", "Trebuchet MS", sans-serif;
+      font-synthesis: none;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse at 11% 9%, #ffffffb8 0, transparent 31rem),
+        var(--paper);
+    }
+    button { font: inherit; }
+    button:focus-visible, [tabindex="0"]:focus-visible {
+      outline: 3px solid #a54f35;
+      outline-offset: 3px;
+    }
+    .page { width: min(1160px, calc(100% - 40px)); margin: 0 auto; }
+    .masthead {
+      min-height: 76px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--line);
+      gap: 16px;
+    }
+    .brand { display: flex; align-items: center; gap: 11px; }
+    .brand-mark {
+      width: 38px; height: 38px; display: grid; place-items: center;
+      color: var(--white); background: var(--teal); border-radius: 13px 13px 13px 4px;
+      font-size: 19px; font-weight: 800; transform: rotate(-4deg);
+    }
+    .brand-name { font: 700 18px/1.1 Georgia, serif; letter-spacing: -.02em; }
+    .brand-tag { margin-top: 4px; color: var(--muted); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+    .header-meta { display: flex; align-items: center; gap: 9px; color: var(--muted); font-size: 12px; }
+    .local-badge { padding: 7px 10px; border: 1px solid var(--line); border-radius: 999px; background: #fff9; }
+    .local-badge::before { content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 7px; border-radius: 50%; background: var(--teal); }
+    .intro { display: flex; justify-content: space-between; align-items: end; gap: 24px; padding: 30px 0 20px; }
+    .eyebrow { color: var(--teal); font-weight: 800; font-size: 11px; letter-spacing: .13em; text-transform: uppercase; }
+    h1 { margin: 7px 0 0; font: 500 clamp(27px, 4vw, 39px)/1.08 Georgia, serif; letter-spacing: -.035em; }
+    .intro p { max-width: 500px; margin: 9px 0 0; color: var(--muted); font-size: 14px; line-height: 1.55; }
+    .round-pill { flex: none; padding: 10px 14px; border: 1px solid var(--line); background: var(--white); border-radius: 11px; color: var(--ink); font-weight: 700; font-size: 12px; }
+    .round-pill span { color: var(--teal); }
+    .layout { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(265px, .8fr); gap: 18px; align-items: start; }
+    .game-card, .side-card { background: var(--white); border: 1px solid #e5dfd2; border-radius: 18px; box-shadow: var(--shadow); }
+    .game-card { padding: 21px 22px 19px; }
+    .game-top { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 16px; }
+    .game-title { font: 700 18px Georgia, serif; }
+    .attempt-count { font-size: 12px; color: var(--muted); }
+    .attempt-count strong { color: var(--ink); font-size: 14px; }
+    .board { display: grid; gap: 7px; max-width: 410px; margin: 0 auto; }
+    .guess-row { display: grid; grid-template-columns: 27px repeat(5, minmax(0, 1fr)); gap: 7px; align-items: center; }
+    .row-num { text-align: center; color: #9aa2a0; font-size: 10px; font-weight: 700; }
+    .tile {
+      min-width: 0; aspect-ratio: 1.16 / 1; display: grid; place-items: center;
+      position: relative; border-radius: 9px; border: 1px solid #d8dcd5;
+      background: #fbfaf5; color: var(--ink); font-weight: 800; font-size: clamp(17px, 3vw, 22px);
+      transition: background .18s, transform .18s, border-color .18s;
+    }
+    .tile.filled { border-color: #9eaaa4; background: #fff; }
+    .tile.exact { color: #103d39; border-color: #126b67; background: var(--teal-soft); }
+    .tile.present { color: #60460c; border-color: #c69a30; background: var(--gold-soft); }
+    .tile.absent { color: #704438; border-color: #d1a092; background: var(--coral-soft); }
+    .tile .mark { position: absolute; right: 4px; bottom: 2px; font-size: 9px; font-weight: 900; }
+    .tile.exact .mark::after { content: "✓"; }
+    .tile.present .mark::after { content: "↗"; }
+    .tile.absent .mark::after { content: "×"; }
+    .tile.current { border: 2px solid var(--teal); background: #f1f8f3; }
+    .tile.bounce { animation: bounce .32s ease; }
+    @keyframes bounce { 50% { transform: translateY(-4px); } }
+    .progress-line { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 12px 0 16px 34px; color: var(--muted); font-size: 11px; }
+    .progress-track { width: 90px; height: 4px; border-radius: 9px; background: #e8e5dc; overflow: hidden; }
+    .progress-track span { display: block; height: 100%; background: var(--teal); transition: width .2s; }
+    .entry-row { display: flex; gap: 8px; max-width: 410px; margin: 0 auto; }
+    .submit-btn, .new-round-btn {
+      border: 0; border-radius: 10px; color: white; background: var(--teal);
+      font-weight: 800; cursor: pointer; transition: transform .15s, background .15s;
+    }
+    .submit-btn { min-height: 44px; padding: 0 18px; }
+    .submit-btn:hover, .new-round-btn:hover { background: #0b5551; transform: translateY(-1px); }
+    .submit-btn:disabled { background: #a8b9b2; cursor: not-allowed; transform: none; }
+    .undo-btn { border: 1px solid var(--line); background: transparent; border-radius: 10px; padding: 0 14px; cursor: pointer; color: var(--muted); }
+    .status { max-width: 410px; min-height: 22px; margin: 8px auto 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
+    .status.error { color: #a3452d; font-weight: 700; }
+    .status.success { color: var(--teal); font-weight: 700; }
+    .keypad { max-width: 450px; margin: 14px auto 0; display: grid; gap: 6px; }
+    .key-row { display: flex; justify-content: center; gap: 5px; }
+    .key {
+      min-width: 0; flex: 1; height: 39px; padding: 0 2px; border: 1px solid #e4e1d8;
+      border-radius: 8px; background: #f4f2eb; color: var(--ink); font-weight: 700; font-size: 13px; cursor: pointer;
+    }
+    .key:hover { border-color: var(--teal); }
+    .key.wide { flex: 1.55; font-size: 10px; }
+    .key.exact { color: #103d39; border-color: #9ec5b4; background: var(--teal-soft); }
+    .key.present { color: #60460c; border-color: #e2c66f; background: var(--gold-soft); }
+    .key.absent { color: #704438; border-color: #e3c0b4; background: var(--coral-soft); }
+    .keyboard-hint { margin: 11px 0 0; text-align: center; color: #828b88; font-size: 10px; }
+    .side-stack { display: grid; gap: 14px; }
+    .side-card { padding: 18px; }
+    .side-card h2 { margin: 0; font: 700 17px Georgia, serif; letter-spacing: -.015em; }
+    .side-intro { margin: 6px 0 13px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .clue-list { display: grid; gap: 9px; }
+    .clue { display: grid; grid-template-columns: 30px 1fr; align-items: center; gap: 10px; }
+    .clue-icon { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 9px; font-weight: 900; }
+    .clue-icon.exact { background: var(--teal-soft); color: #12514b; }
+    .clue-icon.present { background: var(--gold-soft); color: #70540f; }
+    .clue-icon.absent { background: var(--coral-soft); color: #824432; }
+    .clue strong { display: block; font-size: 12px; }
+    .clue small { color: var(--muted); font-size: 11px; line-height: 1.35; }
+    .clue-sample { margin-top: 13px; padding: 10px; border-radius: 10px; background: #f7f5ef; }
+    .sample-caption { color: var(--muted); font-size: 10px; margin-bottom: 7px; }
+    .sample-line { display: flex; gap: 5px; }
+    .sample-letter { width: 31px; height: 32px; display: grid; place-items: center; border-radius: 6px; font-size: 12px; font-weight: 800; }
+    .sample-letter.exact { background: var(--teal-soft); }
+    .sample-letter.present { background: var(--gold-soft); }
+    .sample-letter.absent { background: var(--coral-soft); }
+    .mode-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .mode-note { margin: 7px 0 11px; color: var(--muted); font-size: 11px; line-height: 1.45; }
+    .mode-options { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+    .mode-btn { min-height: 36px; border: 1px solid var(--line); border-radius: 9px; background: transparent; color: var(--ink); font-size: 11px; font-weight: 700; cursor: pointer; }
+    .mode-btn[aria-pressed="true"] { border-color: var(--teal); color: var(--teal); background: #e9f3ed; }
+    .mode-btn:disabled { opacity: .6; cursor: not-allowed; }
+    .stats-card { padding-bottom: 14px; }
+    .stats-heading { display: flex; justify-content: space-between; align-items: center; }
+    .stats-caption { color: var(--muted); font-size: 10px; }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 13px; }
+    .stat { padding: 9px 5px; text-align: center; border-radius: 9px; background: #f6f4ee; }
+    .stat strong { display: block; font: 700 21px Georgia, serif; }
+    .stat small { color: var(--muted); font-size: 9px; }
+    .history-label { margin-top: 13px; color: var(--muted); font-size: 10px; }
+    .history-bars { display: grid; grid-template-columns: repeat(6, 1fr); align-items: end; gap: 5px; height: 43px; margin-top: 7px; }
+    .bar-wrap { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: end; gap: 3px; color: var(--muted); font-size: 9px; }
+    .bar { width: 100%; max-width: 20px; min-height: 3px; border-radius: 4px 4px 2px 2px; background: #c8dcd2; }
+    .bottom-strip { margin: 17px 0 26px; padding: 15px 18px; display: flex; align-items: center; justify-content: space-between; gap: 14px; background: #e8eee6; border: 1px solid #dce5da; border-radius: 14px; }
+    .bottom-copy { display: flex; align-items: center; gap: 12px; }
+    .bottom-icon { width: 34px; height: 34px; flex: none; display: grid; place-items: center; border-radius: 50%; background: #d5e6da; color: var(--teal); font-size: 16px; }
+    .bottom-copy strong { display: block; font: 700 14px Georgia, serif; }
+    .bottom-copy small { color: var(--muted); font-size: 11px; }
+    .new-round-btn { min-height: 39px; padding: 0 15px; font-size: 11px; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+    @media (max-width: 760px) {
+      .page { width: min(100% - 28px, 570px); }
+      .masthead { min-height: 66px; }
+      .intro { padding: 24px 0 17px; align-items: start; }
+      .intro p { max-width: 420px; font-size: 13px; }
+      .round-pill { display: none; }
+      .layout { grid-template-columns: 1fr; gap: 12px; }
+      .game-card { padding: 17px 13px 15px; }
+      .side-stack { grid-template-columns: 1fr 1fr; gap: 10px; }
+      .side-card { padding: 14px; }
+      .clues-card { grid-row: span 2; }
+      .side-card h2 { font-size: 15px; }
+      .bottom-strip { margin-bottom: 18px; padding: 13px; }
+    }
+    @media (max-width: 430px) {
+      .page { width: calc(100% - 22px); }
+      .header-meta { font-size: 10px; }
+      .brand-name { font-size: 16px; }
+      .game-card { padding-inline: 10px; }
+      .guess-row { grid-template-columns: 21px repeat(5, minmax(0, 1fr)); gap: 5px; }
+      .board { gap: 6px; }
+      .tile { border-radius: 7px; font-size: 17px; }
+      .keypad { gap: 5px; }
+      .key-row { gap: 3px; }
+      .key { height: 36px; font-size: 12px; border-radius: 7px; }
+      .key.wide { font-size: 9px; }
+      .side-stack { grid-template-columns: 1fr; }
+      .clues-card { grid-row: auto; }
+      .bottom-strip { align-items: start; }
+      .bottom-copy { align-items: start; }
+      .new-round-btn { padding: 0 10px; white-space: nowrap; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="masthead">
+      <div class="brand" aria-label="Entre Letras">
+        <div class="brand-mark" aria-hidden="true">é</div>
+        <div><div class="brand-name">entre letras</div><div class="brand-tag">um jogo de observação</div></div>
+      </div>
+      <div class="header-meta"><span>Português do Brasil</span><span class="local-badge">sem cadastro · no seu dispositivo</span></div>
+    </header>
+
+    <section class="intro" aria-labelledby="page-title">
+      <div>
+        <div class="eyebrow">Uma pausa, uma palavra</div>
+        <h1 id="page-title">Siga as pistas.<br>Encontre o caminho.</h1>
+        <p>Uma palavra de cinco letras, seis tentativas e nenhuma pressa. Cada resposta vira uma pequena pista para a próxima.</p>
+      </div>
+      <div class="round-pill">RODADA <span id="round-number">01</span> <span aria-hidden="true">·</span> livre</div>
+    </section>
+
+    <main class="layout">
+      <section class="game-card" aria-labelledby="game-heading">
+        <div class="game-top">
+          <div class="game-title" id="game-heading">Sua trilha de letras</div>
+          <div class="attempt-count" aria-live="polite"><strong id="attempt-number">2</strong> de 6 pistas usadas</div>
+        </div>
+        <div class="board" id="board" role="group" aria-label="Tabuleiro de seis tentativas e cinco letras por tentativa" tabindex="0"></div>
+        <div class="progress-line"><span id="progress-label">A trilha está começando</span><span class="progress-track" aria-hidden="true"><span id="progress-fill" style="width:33%"></span></span></div>
+        <div class="entry-row">
+          <button type="button" class="undo-btn" id="erase-btn" aria-label="Apagar uma letra">Apagar</button>
+          <button type="button" class="submit-btn" id="submit-btn">Enviar tentativa <span aria-hidden="true">↗</span></button>
+        </div>
+        <div class="status" id="status" role="status" aria-live="polite">Exemplo guiado: repare como cada linha deixa uma pista diferente.</div>
+        <div class="keypad" id="keypad" aria-label="Teclado virtual"></div>
+        <p class="keyboard-hint">Use o teclado do dispositivo ou toque nas letras. Enter envia · ⌫ apaga.</p>
+      </section>
+
+      <aside class="side-stack" aria-label="Guia e informações da rodada">
+        <section class="side-card clues-card" aria-labelledby="clues-title">
+          <h2 id="clues-title">Leia as pistas</h2>
+          <p class="side-intro">Cada marca conta uma parte da história. Cor e símbolo sempre andam juntos.</p>
+          <div class="clue-list">
+            <div class="clue"><span class="clue-icon exact" aria-hidden="true">✓</span><div><strong>No lugar certo</strong><small>A letra existe e já encontrou sua posição.</small></div></div>
+            <div class="clue"><span class="clue-icon present" aria-hidden="true">↗</span><div><strong>Em outro lugar</strong><small>A letra existe, mas tente outra posição.</small></div></div>
+            <div class="clue"><span class="clue-icon absent" aria-hidden="true">×</span><div><strong>Não aparece</strong><small>Essa letra não faz parte da palavra.</small></div></div>
+          </div>
+          <div class="clue-sample" aria-label="Exemplo de leitura: L está no lugar certo, A aparece em outro lugar, M não aparece">
+            <div class="sample-caption">UM EXEMPLO DE LEITURA</div>
+            <div class="sample-line" aria-hidden="true"><span class="sample-letter exact">L ✓</span><span class="sample-letter present">A ↗</span><span class="sample-letter absent">M ×</span></div>
+          </div>
+        </section>
+        <section class="side-card" aria-labelledby="mode-title">
+          <div class="mode-head"><h2 id="mode-title">Ritmo da rodada</h2><span aria-hidden="true">⌁</span></div>
+          <p class="mode-note" id="mode-description">Normal: use todas as pistas que quiser, no seu tempo.</p>
+          <div class="mode-options" role="group" aria-label="Escolha a dificuldade">
+            <button type="button" class="mode-btn" id="normal-btn" aria-pressed="true">Normal</button>
+            <button type="button" class="mode-btn" id="hard-btn" aria-pressed="false">Difícil</button>
+          </div>
+        </section>
+        <section class="side-card stats-card" aria-labelledby="stats-title">
+          <div class="stats-heading"><h2 id="stats-title">Seu caderno</h2><span class="stats-caption">guardado aqui</span></div>
+          <div class="stats">
+            <div class="stat"><strong id="games-stat">0</strong><small>rodadas</small></div>
+            <div class="stat"><strong id="wins-stat">0</strong><small>descobertas</small></div>
+            <div class="stat"><strong id="streak-stat">0</strong><small>em sequência</small></div>
+          </div>
+          <div class="history-label">Descobertas por tentativa</div>
+          <div class="history-bars" id="history-bars" aria-label="Distribuição de vitórias por tentativa"></div>
+        </section>
+      </aside>
+    </main>
+
+    <footer class="bottom-strip">
+      <div class="bottom-copy"><span class="bottom-icon" aria-hidden="true">↻</span><div><strong>Achou a palavra? A próxima já está à espera.</strong><small>Rodadas sem cronômetro · estatísticas e histórico guardados neste dispositivo.</small></div></div>
+      <button type="button" class="new-round-btn" id="new-round-btn">Nova rodada <span aria-hidden="true">→</span></button>
+    </footer>
+  </div>
+  <script>
+    (() => {
+      const answers = ["LIVRO", "JANELA", "NUVEM", "PRAIA", "FREVO", "SABÃO", "LIMÃO", "AVIÃO", "PAPEL", "MELÃO", "BOLSA", "FOLHA", "CHUVA", "NOITE", "VERDE", "PONTE", "SONHO", "CAMPO", "BRISA", "SABOR"];
+      // A pequena lista é apenas conteúdo de demonstração; não há chamadas de rede.
+      const answerPool = answers.filter(word => normalize(word).length === 5 && !word.includes("?"));
+      const accepted = new Set([
+        ...answerPool, "MUNDO", "LÁPIS", "LAPIS", "AMIGO", "PORTA", "PEDRA", "TEMPO", "LINDA", "LINHA", "FAROL",
+        "BARCO", "LIVRE", "FORTE", "TERRA", "GATOS", "CASAS", "DENTE", "FESTA", "SONSA", "TRIGO", "VISTA",
+        "BEIJO", "RISCO", "MANGA", "MORRO", "CINCO", "CORPO", "GENTE", "SINAL", "SORTE", "VALOR", "VENTO",
+        "PONTO", "PRAZO", "RAIOS", "TARDE", "NOIVA", "LUGAR", "CALMA", "AÇÕES", "MAÇÃS",
+        "PÃES", "ÓTIMO", "ÓTIMA", "AÇÃO", "QUASE", "BEBER", "COMER", "ANDAR", "SORRI", "SABER", "DIZER",
+        "LEITE", "PRATO", "FOLGA", "MURAL", "METRO", "NORTE", "SULCO", "CORAL", "FAVOR", "CLARO", "CLARA",
+        "VIVER", "MOVER", "VIRAM", "VIRAR", "ABRIR", "FEIRA", "PASSE", "PEIXE", "FICHA", "FALHA",
+        "CAIXA", "LARGO", "LARGA", "NINHO", "PÁTIO", "ACASO", "ROCHA", "VELHO", "VELHA"
+      ].filter(word => !word.includes("?")));
+      const acceptedNormalized = new Set([...accepted].map(normalize));
+      const STORAGE = "entre-letras-prototipo-v1";
+      const $ = selector => document.querySelector(selector);
+      const boardEl = $("#board");
+      const keypadEl = $("#keypad");
+      const statusEl = $("#status");
+      let saved = readSaved();
+      let target = "LIVRO";
+      let guesses = ["MUNDO", "LÁPIS"];
+      let exhaustedAtLoad = false;
+      const unseenAtLoad = answerPool.filter(word => !saved.seen.includes(normalize(word)));
+      if (saved.seen.includes(normalize(target))) {
+        if (unseenAtLoad.length) target = unseenAtLoad[Math.floor(Math.random() * unseenAtLoad.length)];
+        else { exhaustedAtLoad = true; guesses = []; }
+      }
+      let current = "";
+      let mode = "normal";
+      let finished = exhaustedAtLoad;
+      let gameCounted = false;
+      let round = 1;
+      let letterStates = {};
+      let composing = false;
+      if (!saved.seen.includes(normalize(target)) && !exhaustedAtLoad) {
+        saved.seen.push(normalize(target));
+        save();
+      }
+
+      function normalize(word) {
+        return word.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+      }
+      function readSaved() {
+        try {
+          const value = JSON.parse(localStorage.getItem(STORAGE) || "{}");
+          return {
+            seen: Array.isArray(value.seen) ? value.seen : [],
+            stats: value.stats && typeof value.stats === "object" ? value.stats : { games: 0, wins: 0, streak: 0, distribution: [0, 0, 0, 0, 0, 0] }
+          };
+        } catch (_) {
+          return { seen: [], stats: { games: 0, wins: 0, streak: 0, distribution: [0, 0, 0, 0, 0, 0] } };
+        }
+      }
+      function save() {
+        try { localStorage.setItem(STORAGE, JSON.stringify(saved)); }
+        catch (_) { /* O jogo continua utilizável quando o navegador bloqueia armazenamento. */ }
+      }
+      function pattern(guess) {
+        const answer = normalize(target).split("");
+        const letters = normalize(guess).split("");
+        const result = Array(5).fill("absent");
+        const remaining = {};
+        answer.forEach((letter, index) => {
+          if (letters[index] === letter) result[index] = "exact";
+          else remaining[letter] = (remaining[letter] || 0) + 1;
+        });
+        letters.forEach((letter, index) => {
+          if (result[index] === "exact") return;
+          if (remaining[letter] > 0) { result[index] = "present"; remaining[letter]--; }
+        });
+        return result;
+      }
+      function setStatus(message, type = "") {
+        statusEl.textContent = message;
+        statusEl.className = `status ${type}`;
+      }
+      function updateStates() {
+        letterStates = {};
+        guesses.forEach(guess => {
+          pattern(guess).forEach((kind, index) => {
+            const letter = normalize(guess)[index];
+            const rank = { absent: 1, present: 2, exact: 3 };
+            if (!letterStates[letter] || rank[kind] > rank[letterStates[letter]]) letterStates[letter] = kind;
+          });
+        });
+      }
+      function drawBoard() {
+        updateStates();
+        boardEl.innerHTML = "";
+        for (let row = 0; row < 6; row++) {
+          const line = document.createElement("div");
+          line.className = "guess-row";
+          line.setAttribute("aria-label", `Tentativa ${row + 1}`);
+          const number = document.createElement("span");
+          number.className = "row-num";
+          number.textContent = String(row + 1).padStart(2, "0");
+          number.setAttribute("aria-hidden", "true");
+          line.appendChild(number);
+          const word = guesses[row];
+          for (let col = 0; col < 5; col++) {
+            const tile = document.createElement("div");
+            tile.className = "tile";
+            const letter = word ? Array.from(word)[col] : row === guesses.length && !finished ? Array.from(current)[col] : "";
+            tile.textContent = letter || "";
+            if (word) {
+              const kind = pattern(word)[col];
+              tile.classList.add(kind);
+              tile.setAttribute("aria-label", `${letter}: ${kind === "exact" ? "no lugar certo" : kind === "present" ? "na palavra, em outro lugar" : "não aparece"}`);
+              const mark = document.createElement("span");
+              mark.className = "mark";
+              mark.setAttribute("aria-hidden", "true");
+              tile.appendChild(mark);
+            } else {
+              if (letter) tile.classList.add("filled");
+              if (row === guesses.length && !finished) tile.classList.add("current");
+              tile.setAttribute("aria-label", letter ? `Letra ${letter}` : `Espaço ${col + 1} vazio`);
+            }
+            line.appendChild(tile);
+          }
+          boardEl.appendChild(line);
+        }
+        $("#attempt-number").textContent = guesses.length;
+        $("#progress-label").textContent = finished ? "Trilha concluída" : guesses.length ? `${6 - guesses.length} tentativas restantes` : "Sua primeira pista começa aqui";
+        $("#progress-fill").style.width = `${Math.max(0, (guesses.length / 6) * 100)}%`;
+        $("#submit-btn").disabled = finished;
+        $("#erase-btn").disabled = finished;
+        $("#submit-btn").setAttribute("aria-label", "Enviar palavra de cinco letras");
+        drawKeypad();
+      }
+      function drawKeypad() {
+        keypadEl.innerHTML = "";
+        [["QWERTYUIOP"], ["ASDFGHJKL"], ["ZXCVBNM"]].forEach((row, rowIndex) => {
+          const wrapper = document.createElement("div");
+          wrapper.className = "key-row";
+          if (rowIndex === 2) {
+            wrapper.appendChild(makeKey("⌫", "wide", "Apagar uma letra", eraseLetter));
+          }
+          Array.from(row[0]).forEach(letter => {
+            const button = makeKey(letter, letterStates[letter] || "", `Digitar ${letter}`, () => addLetter(letter));
+            wrapper.appendChild(button);
+          });
+          if (rowIndex === 2) wrapper.appendChild(makeKey("Enviar", "wide", "Enviar tentativa", submitGuess));
+          keypadEl.appendChild(wrapper);
+        });
+      }
+      function makeKey(label, stateClass, ariaLabel, action) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `key ${stateClass}`;
+        button.textContent = label;
+        button.setAttribute("aria-label", ariaLabel);
+        button.disabled = finished;
+        button.addEventListener("click", action);
+        return button;
+      }
+      function addLetter(letter) {
+        if (finished || Array.from(normalize(current)).length >= 5) return;
+        current += letter;
+        setStatus("Continue formando uma palavra de cinco letras.");
+        drawBoard();
+      }
+      function eraseLetter() {
+        if (finished) return;
+        current = Array.from(current).slice(0, -1).join("");
+        drawBoard();
+      }
+      function hardModeError(guess) {
+        const fixed = {};
+        const included = {};
+        guesses.forEach(old => {
+          const revealed = {};
+          pattern(old).forEach((kind, i) => {
+            const letter = normalize(old)[i];
+            if (kind === "exact") fixed[i] = letter;
+            if (kind === "exact" || kind === "present") revealed[letter] = (revealed[letter] || 0) + 1;
+          });
+          Object.entries(revealed).forEach(([letter, count]) => {
+            included[letter] = Math.max(included[letter] || 0, count);
+          });
+        });
+        const letters = normalize(guess);
+        for (const [position, letter] of Object.entries(fixed)) {
+          if (letters[Number(position)] !== letter) return `No modo difícil, mantenha ${letter} na posição ${Number(position) + 1}.`;
+        }
+        for (const [letter, count] of Object.entries(included)) {
+          if ([...letters].filter(item => item === letter).length < count) return `No modo difícil, inclua ${letter} pelo menos ${count} vez${count > 1 ? "es" : ""}.`;
+        }
+        return "";
+      }
+      function finish(won) {
+        finished = true;
+        if (!gameCounted) {
+          saved.stats.games = (saved.stats.games || 0) + 1;
+          saved.stats.distribution = Array.isArray(saved.stats.distribution) ? saved.stats.distribution : [0, 0, 0, 0, 0, 0];
+          if (won) {
+            saved.stats.wins = (saved.stats.wins || 0) + 1;
+            saved.stats.streak = (saved.stats.streak || 0) + 1;
+            saved.stats.distribution[guesses.length - 1] = (saved.stats.distribution[guesses.length - 1] || 0) + 1;
+            setStatus(`Você encontrou ${target}! Uma boa leitura das pistas.`, "success");
+          } else {
+            saved.stats.streak = 0;
+            setStatus(`A trilha terminou. A palavra era ${target}. Agora tem uma nova à espera.`, "error");
+          }
+          gameCounted = true;
+          save();
+        }
+        $("#game-heading").textContent = won ? "Palavra descoberta" : "Fim desta trilha";
+        renderStats();
+        drawBoard();
+        $("#new-round-btn").focus();
+      }
+      function submitGuess() {
+        if (finished) return;
+        const guess = current.trim();
+        if (Array.from(normalize(guess)).length !== 5) {
+          setStatus("Ainda faltam letras: a palavra precisa ter cinco.", "error");
+          $("#board").querySelectorAll(".tile.current").forEach(tile => { tile.classList.add("bounce"); setTimeout(() => tile.classList.remove("bounce"), 350); });
+          return;
+        }
+        if (!acceptedNormalized.has(normalize(guess))) {
+          setStatus("Essa palavra não está no vocabulário desta demonstração. Tente outra; nenhuma chance foi usada.", "error");
+          return;
+        }
+        if (mode === "hard") {
+          const error = hardModeError(guess);
+          if (error) { setStatus(error, "error"); return; }
+        }
+        guesses.push(guess.toLocaleUpperCase("pt-BR"));
+        current = "";
+        const result = pattern(guesses[guesses.length - 1]);
+        const correctCount = result.filter(item => item === "exact").length;
+        const presentCount = result.filter(item => item === "present").length;
+        setStatus(`Pista ${guesses.length}: ${correctCount} ${correctCount === 1 ? "letra no lugar certo" : "letras no lugar certo"}, ${presentCount} ${presentCount === 1 ? "em outro lugar" : "em outros lugares"} e ${5 - correctCount - presentCount} ausentes.`);
+        drawBoard();
+        if (normalize(guesses[guesses.length - 1]) === normalize(target)) finish(true);
+        else if (guesses.length === 6) finish(false);
+      }
+      function renderStats() {
+        const stats = saved.stats;
+        $("#games-stat").textContent = stats.games || 0;
+        $("#wins-stat").textContent = stats.wins || 0;
+        $("#streak-stat").textContent = stats.streak || 0;
+        const distribution = Array.isArray(stats.distribution) ? stats.distribution : [0, 0, 0, 0, 0, 0];
+        const max = Math.max(1, ...distribution);
+        $("#history-bars").innerHTML = distribution.map((value, index) => `<div class="bar-wrap" aria-label="${index + 1} tentativas: ${value} vitória${value === 1 ? "" : "s"}"><span>${value || ""}</span><span class="bar" style="height:${Math.max(3, value / max * 26)}px"></span><span>${index + 1}</span></div>`).join("");
+      }
+      function newRound(chooseNew = true) {
+        if (chooseNew) {
+          const unseen = answerPool.filter(word => !saved.seen.includes(normalize(word)));
+          if (unseen.length === 0) {
+            setStatus("Você percorreu todas as palavras desta demonstração. O conjunto precisa ser atualizado para continuar sem repetições.", "error");
+            return;
+          }
+          target = unseen[Math.floor(Math.random() * unseen.length)];
+          saved.seen.push(normalize(target));
+          save();
+          round++;
+        }
+        guesses = [];
+        current = "";
+        finished = false;
+        gameCounted = false;
+        $("#game-heading").textContent = "Sua trilha de letras";
+        $("#round-number").textContent = String(round).padStart(2, "0");
+        $("#attempt-number").textContent = "0";
+        setStatus("Nova rodada pronta. Digite uma palavra de cinco letras.");
+        drawBoard();
+        $("#board").focus();
+      }
+      function setMode(nextMode) {
+        if (mode === nextMode) return;
+        if (guesses.length || current) {
+          const restart = window.confirm("Trocar a dificuldade reinicia esta trilha. Quer continuar?");
+          if (!restart) return;
+          mode = nextMode;
+          $("#normal-btn").setAttribute("aria-pressed", String(mode === "normal"));
+          $("#hard-btn").setAttribute("aria-pressed", String(mode === "hard"));
+          $("#mode-description").textContent = mode === "hard"
+            ? "Difícil: mantenha as letras confirmadas e inclua as que já apareceram."
+            : "Normal: use todas as pistas que quiser, no seu tempo.";
+          newRound(false);
+          setStatus(`Modo ${mode === "hard" ? "difícil" : "normal"} escolhido. A trilha foi reiniciada.`);
+          return;
+        }
+        mode = nextMode;
+        $("#normal-btn").setAttribute("aria-pressed", String(mode === "normal"));
+        $("#hard-btn").setAttribute("aria-pressed", String(mode === "hard"));
+        $("#mode-description").textContent = mode === "hard"
+          ? "Difícil: mantenha as letras confirmadas e inclua as que já apareceram."
+          : "Normal: use todas as pistas que quiser, no seu tempo.";
+        setStatus(`Modo ${mode === "hard" ? "difícil" : "normal"} escolhido.`);
+      }
+      document.addEventListener("keydown", event => {
+        if (event.ctrlKey || event.metaKey || event.altKey || composing) return;
+        if (event.key === "Enter") { event.preventDefault(); submitGuess(); return; }
+        if (event.key === "Backspace" || event.key === "Delete") { event.preventDefault(); eraseLetter(); return; }
+        if (/^\p{L}$/u.test(event.key)) {
+          event.preventDefault();
+          addLetter(event.key.toLocaleUpperCase("pt-BR"));
+        }
+      });
+      document.addEventListener("compositionstart", () => { composing = true; });
+      document.addEventListener("compositionend", () => { composing = false; });
+      $("#submit-btn").addEventListener("click", submitGuess);
+      $("#erase-btn").addEventListener("click", eraseLetter);
+      $("#new-round-btn").addEventListener("click", () => newRound(true));
+      $("#normal-btn").addEventListener("click", () => setMode("normal"));
+      $("#hard-btn").addEventListener("click", () => setMode("hard"));
+      $("#round-number").textContent = String(round).padStart(2, "0");
+      drawBoard();
+      renderStats();
+      if (exhaustedAtLoad) setStatus("Você já percorreu as palavras disponíveis nesta demonstração. O conjunto precisa ser atualizado para outra rodada.", "error");
+    })();
+  </script>
+</body>
+</html>

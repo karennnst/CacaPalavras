@@ -1,0 +1,726 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101d2b">
+  <title>Entre Letras — jogo de palavras acessível</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #f5f7f4;
+      --muted: #c2cbd3;
+      --page: #101d2b;
+      --panel: #172838;
+      --panel-2: #203548;
+      --line: #75889a;
+      --accent: #d6ff63;
+      --focus: #ffe66d;
+      --right: #164d3b;
+      --right-border: #85e8ae;
+      --present: #56410d;
+      --present-border: #ffdc72;
+      --absent: #293847;
+      --absent-border: #93a2af;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+    }
+
+    * { box-sizing: border-box; }
+    html { min-width: 320px; background: var(--page); }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse at 50% -30%, #29445b 0, transparent 58%),
+        var(--page);
+      line-height: 1.5;
+    }
+    button { font: inherit; }
+    button:focus-visible, input:focus-visible + span, a:focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 4px;
+      box-shadow: 0 0 0 2px var(--page);
+    }
+    .skip-link {
+      position: absolute;
+      z-index: 10;
+      top: 8px;
+      left: 8px;
+      padding: .7rem 1rem;
+      transform: translateY(-160%);
+      color: #101d2b;
+      background: var(--focus);
+      border-radius: 8px;
+      font-weight: 800;
+    }
+    .skip-link:focus { transform: translateY(0); }
+    .shell { width: min(1040px, calc(100% - 40px)); margin: 0 auto; }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 22px 0 18px;
+      border-bottom: 1px solid #536577;
+    }
+    .brand { display: flex; align-items: center; gap: 13px; }
+    .brand-mark {
+      display: grid;
+      width: 46px;
+      height: 46px;
+      place-items: center;
+      color: var(--page);
+      background: var(--accent);
+      border-radius: 14px 14px 14px 4px;
+      font-size: 1.5rem;
+      font-weight: 950;
+    }
+    .brand-name { margin: 0; font-size: 1.22rem; font-weight: 850; letter-spacing: -.03em; }
+    .brand-tag { margin: 1px 0 0; color: var(--muted); font-size: .83rem; }
+    .offline {
+      padding: 6px 10px;
+      color: #e7f2da;
+      border: 1px solid #78905d;
+      border-radius: 999px;
+      font-size: .76rem;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+    main { padding: 28px 0 48px; }
+    .intro {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: end;
+      gap: 20px;
+      margin-bottom: 23px;
+    }
+    .eyebrow {
+      margin: 0 0 5px;
+      color: var(--accent);
+      font-size: .76rem;
+      font-weight: 850;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+    h1 { margin: 0; font-size: clamp(1.9rem, 4vw, 2.75rem); line-height: 1.08; letter-spacing: -.045em; }
+    .intro-copy { max-width: 620px; margin: 9px 0 0; color: var(--muted); }
+    .round-count {
+      min-width: 112px;
+      padding: 11px 15px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      text-align: center;
+    }
+    .round-count strong { display: block; color: var(--accent); font-size: 1.35rem; line-height: 1.2; }
+    .round-count span { color: var(--muted); font-size: .78rem; }
+    .layout { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(270px, .8fr); gap: 19px; align-items: start; }
+    .card {
+      background: linear-gradient(145deg, #1a2d3e, #172838 65%);
+      border: 1px solid #536779;
+      border-radius: 18px;
+      box-shadow: 0 12px 34px #08111a55;
+    }
+    .play-card { padding: 22px; }
+    .play-top { display: flex; align-items: start; justify-content: space-between; gap: 16px; }
+    h2 { margin: 0; font-size: 1.12rem; letter-spacing: -.015em; }
+    .subhead { margin: 4px 0 0; color: var(--muted); font-size: .88rem; }
+    .difficulty { padding: 0; margin: 0; border: 0; }
+    .difficulty legend { margin-bottom: 6px; color: var(--muted); font-size: .76rem; font-weight: 750; }
+    .mode-options { display: flex; padding: 3px; background: #0d1924; border: 1px solid #65798a; border-radius: 10px; }
+    .mode-option { position: relative; }
+    .mode-option input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+    .mode-option span {
+      display: block;
+      padding: 6px 9px;
+      border-radius: 7px;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: .79rem;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+    .mode-option input:checked + span { color: #101d2b; background: var(--accent); }
+    .mode-option input:disabled + span { cursor: not-allowed; opacity: .72; }
+    .mode-option input:focus-visible + span { outline: 3px solid var(--focus); outline-offset: 3px; }
+    .divider { margin: 17px 0 14px; border: 0; border-top: 1px solid #475c6e; }
+    .board-wrap { display: flex; justify-content: center; }
+    .board {
+      display: grid;
+      grid-template-rows: repeat(6, 48px);
+      gap: 7px;
+      width: min(100%, 330px);
+    }
+    .board-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px; }
+    .tile {
+      display: grid;
+      min-width: 0;
+      place-items: center;
+      border: 2px solid #637789;
+      border-radius: 9px;
+      background: #122231;
+      color: var(--ink);
+      font-size: 1.28rem;
+      font-weight: 850;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+    .tile.filled { border-color: #b9c6d0; }
+    .tile.correct { color: #fff; background: var(--right); border: 3px solid var(--right-border); }
+    .tile.present { color: #fff; background: var(--present); border: 3px dashed var(--present-border); }
+    .tile.absent { color: #f4f6f8; background: var(--absent); border: 3px dotted var(--absent-border); }
+    .tile .letter { grid-area: 1 / 1; }
+    .tile .mark { align-self: start; justify-self: end; padding: 1px 3px; font-size: .56rem; font-weight: 950; line-height: 1; }
+    .entry-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; margin: 17px 0 13px; }
+    .entry-hint { align-self: center; color: var(--muted); font-size: .82rem; }
+    .primary, .secondary, .key {
+      min-height: 44px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 800;
+      transition: transform .12s ease, background-color .12s ease;
+    }
+    .primary {
+      min-width: 125px;
+      padding: 10px 17px;
+      color: #101d2b;
+      background: var(--accent);
+      border: 2px solid var(--accent);
+    }
+    .primary:hover { background: #e5ff9b; transform: translateY(-1px); }
+    .secondary { padding: 9px 13px; color: var(--ink); background: #22394d; border: 1px solid #8395a5; }
+    .secondary:hover { background: #304b61; }
+    .keyboard { display: grid; gap: 6px; }
+    .key-row { display: flex; justify-content: center; gap: 5px; }
+    .key {
+      flex: 1 1 0;
+      min-width: 0;
+      min-height: 43px;
+      padding: 7px 2px;
+      color: var(--ink);
+      background: #33495c;
+      border: 1px solid #91a1af;
+      font-size: .86rem;
+    }
+    .key:hover { background: #475f74; }
+    .key.wide { flex: 1.55 1 0; font-size: .73rem; }
+    .key.correct { color: #fff; background: var(--right); border: 2px solid var(--right-border); }
+    .key.present { color: #fff; background: var(--present); border: 2px dashed var(--present-border); }
+    .key.absent { color: #e1e7eb; background: #253440; border: 2px dotted #a7b3bd; }
+    .play-foot { display: flex; justify-content: space-between; gap: 14px; margin-top: 13px; color: var(--muted); font-size: .76rem; }
+    .play-foot strong { color: var(--ink); }
+    .side { display: grid; gap: 15px; }
+    .side-card { padding: 18px; }
+    .section-title { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 13px; }
+    .section-title h2 { font-size: 1rem; }
+    .section-icon { color: var(--accent); font-size: 1.1rem; }
+    .legend-list { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+    .legend-item { display: grid; grid-template-columns: 34px 1fr; align-items: center; gap: 10px; }
+    .legend-swatch {
+      display: grid;
+      width: 34px;
+      height: 34px;
+      place-items: center;
+      border-radius: 7px;
+      font-weight: 950;
+    }
+    .legend-swatch.correct { background: var(--right); border: 2px solid var(--right-border); }
+    .legend-swatch.present { background: var(--present); border: 2px dashed var(--present-border); }
+    .legend-swatch.absent { background: var(--absent); border: 2px dotted var(--absent-border); }
+    .legend-item strong { display: block; font-size: .86rem; }
+    .legend-item span:last-child { color: var(--muted); font-size: .77rem; }
+    .instructions { margin: 0; padding-left: 1.2rem; color: var(--muted); font-size: .84rem; }
+    .instructions li + li { margin-top: 7px; }
+    .instructions strong { color: var(--ink); }
+    .hard-note { margin: 12px 0 0; padding: 10px 11px; color: #f7ecc8; background: #382f1c; border-left: 3px solid var(--focus); border-radius: 4px 8px 8px 4px; font-size: .78rem; }
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 14px; text-align: center; }
+    .stat strong { display: block; font-size: 1.32rem; line-height: 1.15; }
+    .stat span { color: var(--muted); font-size: .68rem; }
+    .distribution-title { margin: 0 0 7px; font-size: .79rem; font-weight: 750; }
+    .distribution { display: grid; gap: 4px; }
+    .dist-row { display: grid; grid-template-columns: 13px 1fr 22px; align-items: center; gap: 7px; color: var(--muted); font-size: .72rem; }
+    .bar-track { height: 13px; background: #0f1d29; border-radius: 3px; overflow: hidden; }
+    .bar { display: flex; min-width: 0; height: 100%; align-items: center; justify-content: end; padding-right: 3px; color: #101d2b; background: #adce70; border-radius: 3px; font-size: .64rem; font-weight: 900; }
+    .new-round { width: 100%; margin-top: 14px; }
+    .privacy { margin: 9px 0 0; color: var(--muted); font-size: .72rem; text-align: center; }
+    .status {
+      min-height: 25px;
+      margin: 0 0 10px;
+      color: var(--ink);
+      font-size: .88rem;
+      font-weight: 700;
+      text-align: center;
+    }
+    .status:empty { min-height: 0; margin-bottom: 0; }
+    .status.error { color: #ffd08b; }
+    .status.success { color: #adf2c9; }
+    .demo-label {
+      display: inline-block;
+      padding: 3px 7px;
+      color: #e9f1d7;
+      background: #31412c;
+      border: 1px solid #799160;
+      border-radius: 5px;
+      font-size: .65rem;
+      font-weight: 850;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    footer { padding-top: 15px; color: #bdc8d1; border-top: 1px solid #425668; font-size: .75rem; }
+    footer p { margin: 0; }
+
+    @media (max-width: 760px) {
+      .layout { grid-template-columns: 1fr; }
+      .side { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .side-card:last-child { grid-column: 1 / -1; }
+    }
+    @media (max-width: 520px) {
+      .shell { width: min(100% - 24px, 420px); }
+      header { padding: 14px 0; }
+      .brand-tag { font-size: .73rem; }
+      .offline { font-size: .68rem; padding: 5px 8px; }
+      main { padding-top: 20px; }
+      .intro { grid-template-columns: 1fr auto; align-items: center; gap: 10px; margin-bottom: 17px; }
+      .intro-copy { font-size: .88rem; }
+      .round-count { min-width: 76px; padding: 8px; }
+      .round-count span { font-size: .66rem; }
+      .play-card { padding: 15px 12px; }
+      .play-top { flex-direction: column; }
+      .difficulty { width: 100%; }
+      .mode-options { width: fit-content; }
+      .board { grid-template-rows: repeat(6, min(12vw, 44px)); gap: 6px; width: min(100%, 285px); }
+      .board-row { gap: 6px; }
+      .entry-row { grid-template-columns: 1fr; }
+      .entry-hint { text-align: center; }
+      .primary { width: 100%; }
+      .key { min-height: 42px; font-size: .8rem; }
+      .key.wide { font-size: .67rem; }
+      .play-foot { flex-direction: column; gap: 3px; text-align: center; }
+      .side { grid-template-columns: 1fr; }
+      .side-card:last-child { grid-column: auto; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#jogo">Pular para o jogo</a>
+  <div class="shell">
+    <header>
+      <div class="brand" aria-label="Entre Letras">
+        <div class="brand-mark" aria-hidden="true">E</div>
+        <div>
+          <p class="brand-name">entre letras</p>
+          <p class="brand-tag">um jogo de palavras para todo mundo</p>
+        </div>
+      </div>
+      <span class="offline">● Jogo local · sem cadastro</span>
+    </header>
+
+    <main id="jogo">
+      <section class="intro" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow">Pense, tente, descubra</p>
+          <h1 id="page-title">Uma palavra. Seis chances.</h1>
+          <p class="intro-copy">Descubra a palavra brasileira de cinco letras. Cada pista vem com <strong>cor, forma e texto</strong> — escolha o jeito que funciona melhor para você.</p>
+        </div>
+        <div class="round-count" aria-label="Rodadas concluídas neste dispositivo">
+          <strong id="round-number">0</strong><span>rodadas concluídas</span>
+        </div>
+      </section>
+
+      <div class="layout">
+        <section class="card play-card" aria-labelledby="game-title">
+          <div class="play-top">
+            <div>
+              <h2 id="game-title">Sua rodada</h2>
+              <p class="subhead"><span id="attempt-count">0 de 6 tentativas</span> · uma letra por casa</p>
+            </div>
+            <fieldset class="difficulty" id="difficulty">
+              <legend>Dificuldade <span id="mode-lock" hidden>· fixa nesta rodada</span></legend>
+              <div class="mode-options">
+                <label class="mode-option"><input type="radio" name="mode" value="normal" checked><span>Normal</span></label>
+                <label class="mode-option"><input type="radio" name="mode" value="hard"><span>Difícil</span></label>
+              </div>
+            </fieldset>
+          </div>
+          <hr class="divider">
+          <div class="board-wrap">
+            <div class="board" id="board" role="table" aria-label="Tabuleiro, seis tentativas de cinco letras"></div>
+          </div>
+          <div class="entry-row">
+            <span class="entry-hint">Digite uma palavra e envie sua tentativa.</span>
+            <button class="primary" id="submit-guess" type="button">Enviar tentativa</button>
+          </div>
+          <p class="status" id="game-status" role="status" aria-live="polite" aria-atomic="true"></p>
+          <div class="keyboard" id="keyboard" role="group" aria-label="Teclado virtual"></div>
+          <div class="play-foot">
+            <span><strong>Teclado físico:</strong> letras, Enter para enviar, Backspace para apagar.</span>
+            <span>Acentos são aceitos.</span>
+          </div>
+        </section>
+
+        <aside class="side" aria-label="Ajuda e estatísticas">
+          <section class="card side-card" aria-labelledby="clues-title">
+            <div class="section-title">
+              <h2 id="clues-title">Como ler as pistas</h2><span class="demo-label">Exemplo</span>
+            </div>
+            <ul class="legend-list">
+              <li class="legend-item">
+                <span class="legend-swatch correct" aria-hidden="true">✓</span>
+                <span><strong>✓ Posição certa</strong><span>A letra está na resposta e no lugar certo.</span></span>
+              </li>
+              <li class="legend-item">
+                <span class="legend-swatch present" aria-hidden="true">↔</span>
+                <span><strong>↔ Está na palavra</strong><span>A letra aparece, mas em outro lugar.</span></span>
+              </li>
+              <li class="legend-item">
+                <span class="legend-swatch absent" aria-hidden="true">×</span>
+                <span><strong>× Não aparece</strong><span>Essa letra não está na resposta.</span></span>
+              </li>
+            </ul>
+          </section>
+
+          <section class="card side-card" aria-labelledby="instructions-title">
+            <div class="section-title">
+              <h2 id="instructions-title">Como jogar</h2><span class="section-icon" aria-hidden="true">⌨</span>
+            </div>
+            <ol class="instructions">
+              <li>Forme uma palavra de <strong>cinco letras</strong>.</li>
+              <li>Envie. As pistas aparecem em cada letra.</li>
+              <li>Use até seis tentativas para acertar.</li>
+            </ol>
+            <p class="hard-note"><strong>Modo difícil:</strong> mantenha as letras confirmadas e use as letras que já sabe que existem.</p>
+          </section>
+
+          <section class="card side-card" aria-labelledby="stats-title">
+            <div class="section-title">
+              <h2 id="stats-title">Suas estatísticas</h2><span class="section-icon" aria-hidden="true">▤</span>
+            </div>
+            <div class="stats-grid" aria-live="polite" aria-label="Estatísticas atualizadas localmente">
+              <div class="stat"><strong id="stat-played">0</strong><span>jogadas</span></div>
+              <div class="stat"><strong id="stat-win">0%</strong><span>vitórias</span></div>
+              <div class="stat"><strong id="stat-streak">0</strong><span>sequência</span></div>
+              <div class="stat"><strong id="stat-best">—</strong><span>melhor</span></div>
+            </div>
+            <p class="distribution-title">Vitórias por tentativa</p>
+            <div class="distribution" id="distribution" aria-label="Distribuição de vitórias por tentativa"></div>
+            <button class="secondary new-round" id="new-round" type="button">↻ Nova rodada</button>
+            <p class="privacy">Salvo só neste navegador. Limpar dados do navegador apaga as estatísticas.</p>
+          </section>
+        </aside>
+      </div>
+    </main>
+
+    <footer><p>Entre Letras · protótipo acessível · sem rede ou dependências externas.</p></footer>
+  </div>
+
+  <script>
+    (() => {
+      "use strict";
+      const answers = ["LIMÃO", "PONTE", "NINHO", "FOLHA", "NUVEM", "BARCO", "CAMPO", "SONHO", "FESTA", "LIVRO", "PEDRA", "CHUVA", "PRAIA", "MANGA", "TEMPO", "SORTE", "CALMA", "FAROL", "BRISA", "NOITE"];
+      const acceptedWords = new Set([
+        ...answers, "AMIGO", "AMORA", "AREIA", "AROMA", "BAIXO", "BANHO", "BEIJO", "BOLSA", "BONUS", "BRAVO",
+        "CABRA", "CAIXA", "CALOR", "CANAL", "CANTO", "CARRO", "CASAL", "CASAS", "CERTO", "CINCO", "CLARO",
+        "COISA", "CONTO", "CORPO", "CORTE", "COURO", "CRAVO", "DANÇA", "DEDOS", "DENTE", "DOIDO", "DOURA",
+        "FALAR", "FALTA", "FAVOR", "FEIRA", "FELIZ", "FERRO", "FILHO", "FLORA", "FOCAR", "FORTE", "FRASE",
+        "GENTE", "GOSTO", "GRAMA", "GRUPO", "HONRA", "IDEIA", "IGUAL", "JANTA", "JEITO", "JOVEM", "LADOS",
+        "LARVA", "LEITE", "LIMPO", "LINDA", "LINHA", "LONGE", "LUGAR", "MACIO", "MAIOR", "MARCA", "MELÃO",
+        "MENOS", "MESMA", "METRO", "MEXER", "MIolo", "MUNDO", "NACAO", "NADAR", "NATAL", "NAVIO", "NEGRO",
+        "NORTE", "NOVAS", "OLHAR", "OMBRO", "ONZES", "ORDEM", "OUVIR", "PAPEL", "PARTE", "PASSO", "PASTA",
+        "PEDIR", "PEIXE", "PERTO", "PESCA", "PIANO", "PILHA", "PINTA", "PODER", "POEMA", "POETA", "PONTO",
+        "PORTA", "PRATO", "PRESA", "PRIMO", "QUASE", "QUILO", "RAIVA", "RAMOS", "REGRA", "RISCO", "RITMO",
+        "ROCHA", "ROUPA", "SABER", "SABOR", "SAÍDA", "SALTO", "SAÚDE", "SEÇÃO", "SENHA", "SINAL", "SÍTIO",
+        "SÓLIDO", "TARDE", "TAXAS", "TELHA", "TERRA", "TIGRE", "TINTA", "TOQUE", "TORRE", "TRATO", "TREVO",
+        "TROCA", "TURMA", "ÚNICA", "VÁLIDO", "VALOR", "VASOS", "VELHO", "VENTO", "VERDE", "VESTE", "VÍDEO",
+        "VIGOR", "VIRAR", "VISÃO", "VISTA", "VIVER", "VOGAL", "VULTO", "ZEBRA"
+      ].map(normalize));
+      const letters = [
+        ["Q","W","E","R","T","Y","U","I","O","P"],
+        ["A","S","D","F","G","H","J","K","L"],
+        ["ENTER","Z","X","C","V","B","N","M","⌫"]
+      ];
+      const storageKeys = { stats: "entre-letras-stats-v1", used: "entre-letras-used-v1" };
+      const board = document.getElementById("board");
+      const keyboard = document.getElementById("keyboard");
+      const status = document.getElementById("game-status");
+      const guessButton = document.getElementById("submit-guess");
+      const modeInputs = [...document.querySelectorAll('input[name="mode"]')];
+      let stats = load(storageKeys.stats, { played: 0, wins: 0, streak: 0, best: 0, distribution: [0,0,0,0,0,0] });
+      let used = load(storageKeys.used, []);
+      let target = "";
+      let targetNorm = "";
+      let guesses = [];
+      let current = [];
+      let keyStates = {};
+      let finished = false;
+      let modeLocked = false;
+
+      function normalize(value) {
+        return String(value).normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ç/gi, "c").toLocaleUpperCase("pt-BR");
+      }
+      function load(key, fallback) {
+        try {
+          const value = JSON.parse(localStorage.getItem(key));
+          return value == null ? fallback : value;
+        } catch (_) { return fallback; }
+      }
+      function save(key, value) {
+        try { localStorage.setItem(key, JSON.stringify(value)); } catch (_) { /* armazenamento opcional */ }
+      }
+      function makeBoard() {
+        for (let row = 0; row < 6; row++) {
+          const rowEl = document.createElement("div");
+          rowEl.className = "board-row";
+          rowEl.setAttribute("role", "row");
+          for (let col = 0; col < 5; col++) {
+            const tile = document.createElement("div");
+            tile.className = "tile";
+            tile.setAttribute("role", "cell");
+            tile.setAttribute("aria-label", `Tentativa ${row + 1}, letra ${col + 1}, vazia`);
+            rowEl.append(tile);
+          }
+          board.append(rowEl);
+        }
+      }
+      function makeKeyboard() {
+        letters.forEach((row) => {
+          const rowEl = document.createElement("div");
+          rowEl.className = "key-row";
+          row.forEach((keyName) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = `key${keyName === "ENTER" || keyName === "⌫" ? " wide" : ""}`;
+            button.textContent = keyName === "ENTER" ? "Enviar" : keyName === "⌫" ? "Apagar" : keyName;
+            button.setAttribute("aria-label", keyName === "ENTER" ? "Enviar tentativa" : keyName === "⌫" ? "Apagar última letra" : `Inserir letra ${keyName}`);
+            button.dataset.key = keyName;
+            button.addEventListener("click", () => press(keyName));
+            rowEl.append(button);
+          });
+          keyboard.append(rowEl);
+        });
+      }
+      function beginRound(announce) {
+        const available = answers.filter((word) => !used.includes(normalize(word)));
+        if (!available.length) {
+          target = "";
+          targetNorm = "";
+          finished = true;
+          updateBoard();
+          setStatus("Você já jogou todas as palavras disponíveis neste protótipo. O banco pode ser atualizado em uma nova versão.", "error");
+          return;
+        }
+        target = available[Math.floor(Math.random() * available.length)];
+        targetNorm = normalize(target);
+        guesses = [];
+        current = [];
+        keyStates = {};
+        finished = false;
+        modeLocked = false;
+        modeInputs.forEach((input) => { input.disabled = false; });
+        document.getElementById("mode-lock").hidden = true;
+        updateBoard();
+        updateKeyboard();
+        updateCounters();
+        setStatus(announce ? "Nova rodada. Escolha a dificuldade e digite uma palavra de cinco letras." : "Digite uma palavra de cinco letras para começar.", "");
+      }
+      function setStatus(message, kind) {
+        status.textContent = message;
+        status.className = `status${kind ? ` ${kind}` : ""}`;
+      }
+      function updateCounters() {
+        document.getElementById("attempt-count").textContent = `${guesses.length} de 6 tentativas`;
+        document.getElementById("round-number").textContent = String(stats.played);
+      }
+      function updateBoard() {
+        const rowEls = [...board.children];
+        rowEls.forEach((rowEl, rowIndex) => {
+          const submitted = guesses[rowIndex];
+          const lettersInRow = submitted ? submitted.letters : rowIndex === guesses.length ? current : [];
+          const result = submitted ? submitted.result : [];
+          [...rowEl.children].forEach((tile, colIndex) => {
+            const letter = lettersInRow[colIndex] || "";
+            tile.className = "tile";
+            tile.replaceChildren();
+            if (letter) {
+              const letterSpan = document.createElement("span");
+              letterSpan.className = "letter";
+              letterSpan.textContent = letter;
+              tile.append(letterSpan);
+              if (result[colIndex]) {
+                const state = result[colIndex];
+                const mark = document.createElement("span");
+                mark.className = "mark";
+                mark.setAttribute("aria-hidden", "true");
+                mark.textContent = state === "correct" ? "✓" : state === "present" ? "↔" : "×";
+                tile.classList.add(state);
+                tile.append(mark);
+                const spoken = state === "correct" ? "posição certa" : state === "present" ? "está na palavra, em outra posição" : "não aparece na resposta";
+                tile.setAttribute("aria-label", `Tentativa ${rowIndex + 1}, letra ${colIndex + 1}: ${letter}, ${spoken}`);
+              } else {
+                tile.classList.add("filled");
+                tile.setAttribute("aria-label", `Tentativa ${rowIndex + 1}, letra ${colIndex + 1}: ${letter}`);
+              }
+            } else {
+              tile.setAttribute("aria-label", `Tentativa ${rowIndex + 1}, letra ${colIndex + 1}, vazia`);
+            }
+          });
+        });
+        updateCounters();
+      }
+      function updateKeyboard() {
+        [...keyboard.querySelectorAll("button")].forEach((button) => {
+          const value = button.dataset.key;
+          const state = keyStates[value];
+          button.classList.remove("correct", "present", "absent");
+          if (state) button.classList.add(state);
+          const described = state === "correct" ? ", posição certa" : state === "present" ? ", está na palavra" : state === "absent" ? ", não aparece na resposta" : "";
+          button.setAttribute("aria-label", value === "ENTER" ? "Enviar tentativa" : value === "⌫" ? "Apagar última letra" : `Inserir letra ${value}${described}`);
+        });
+      }
+      function press(keyName) {
+        if (finished) return;
+        if (keyName === "ENTER") { submit(); return; }
+        if (keyName === "⌫") {
+          current.pop();
+          updateBoard();
+          setStatus(current.length ? `${current.length} de 5 letras.` : "Tentativa apagada.", "");
+          return;
+        }
+        const normalized = normalize(keyName);
+        if (/^[A-Z]$/.test(normalized) && current.length < 5) {
+          current.push(normalized);
+          updateBoard();
+          setStatus(`${current.length} de 5 letras.`, "");
+        }
+      }
+      function score(guess, answer) {
+        const result = Array(5).fill("absent");
+        const remaining = answer.split("");
+        for (let i = 0; i < 5; i++) {
+          if (guess[i] === answer[i]) {
+            result[i] = "correct";
+            remaining[i] = null;
+          }
+        }
+        for (let i = 0; i < 5; i++) {
+          if (result[i] !== "correct") {
+            const found = remaining.indexOf(guess[i]);
+            if (found !== -1) {
+              result[i] = "present";
+              remaining[found] = null;
+            }
+          }
+        }
+        return result;
+      }
+      function validateHardMode(guess) {
+        if (modeInputs.find((input) => input.checked).value !== "hard") return "";
+        for (const prior of guesses) {
+          for (let i = 0; i < 5; i++) {
+            if (prior.result[i] === "correct" && guess[i] !== prior.letters[i]) {
+              return `Modo difícil: mantenha ${prior.letters[i]} na posição ${i + 1}.`;
+            }
+            if (prior.result[i] === "present" && !guess.includes(prior.letters[i])) {
+              return `Modo difícil: inclua a letra ${prior.letters[i]} nesta tentativa.`;
+            }
+          }
+        }
+        return "";
+      }
+      function submit() {
+        if (finished) return;
+        if (current.length !== 5) {
+          setStatus(`Tentativa incompleta: faltam ${5 - current.length} ${5 - current.length === 1 ? "letra" : "letras"}. Você não perdeu uma chance.`, "error");
+          return;
+        }
+        const guess = current.slice();
+        const word = guess.join("");
+        if (!acceptedWords.has(word)) {
+          setStatus("Palavra não reconhecida. Confira a escrita; sua tentativa não foi consumida.", "error");
+          return;
+        }
+        const hardError = validateHardMode(guess);
+        if (hardError) {
+          setStatus(`${hardError} Sua tentativa não foi consumida.`, "error");
+          return;
+        }
+        modeLocked = true;
+        modeInputs.forEach((input) => { input.disabled = true; });
+        document.getElementById("mode-lock").hidden = false;
+        const result = score(guess, targetNorm);
+        guesses.push({ letters: guess, result });
+        current = [];
+        result.forEach((state, index) => {
+          const letter = guess[index];
+          const priority = { absent: 0, present: 1, correct: 2 };
+          if (!keyStates[letter] || priority[state] > priority[keyStates[letter]]) keyStates[letter] = state;
+        });
+        updateBoard();
+        updateKeyboard();
+        const rowNumber = guesses.length;
+        if (word === targetNorm) {
+          complete(true);
+          setStatus(`Você acertou em ${rowNumber} ${rowNumber === 1 ? "tentativa" : "tentativas"}! A palavra era ${target}.`, "success");
+        } else if (guesses.length === 6) {
+          complete(false);
+          setStatus(`Fim da rodada. A palavra era ${target}. Inicie uma nova rodada para jogar de novo.`, "error");
+        } else {
+          const clue = result.map((state, index) => `${guess[index]}: ${state === "correct" ? "posição certa" : state === "present" ? "está na palavra, em outra posição" : "não aparece"}`).join("; ");
+          setStatus(`Tentativa ${rowNumber} registrada. ${clue}.`, "");
+        }
+      }
+      function complete(won) {
+        finished = true;
+        used.push(targetNorm);
+        save(storageKeys.used, used);
+        stats.played += 1;
+        if (won) {
+          stats.wins += 1;
+          stats.streak += 1;
+          stats.distribution[guesses.length - 1] += 1;
+          stats.best = stats.best ? Math.min(stats.best, guesses.length) : guesses.length;
+        } else {
+          stats.streak = 0;
+        }
+        save(storageKeys.stats, stats);
+        renderStats();
+      }
+      function renderStats() {
+        document.getElementById("stat-played").textContent = stats.played;
+        document.getElementById("stat-win").textContent = `${stats.played ? Math.round(stats.wins / stats.played * 100) : 0}%`;
+        document.getElementById("stat-streak").textContent = stats.streak;
+        document.getElementById("stat-best").textContent = stats.best || "—";
+        document.getElementById("round-number").textContent = stats.played;
+        const max = Math.max(1, ...stats.distribution);
+        document.getElementById("distribution").innerHTML = stats.distribution.map((count, index) => {
+          const width = count ? Math.max(15, count / max * 100) : 0;
+          return `<div class="dist-row"><span>${index + 1}</span><div class="bar-track"><div class="bar" style="width:${width}%">${count || ""}</div></div><span>${count}</span></div>`;
+        }).join("");
+      }
+      guessButton.addEventListener("click", submit);
+      document.getElementById("new-round").addEventListener("click", () => beginRound(true));
+      document.addEventListener("keydown", (event) => {
+        if (event.altKey || event.ctrlKey || event.metaKey || event.isComposing) return;
+        if (event.key === "Enter" && event.target.closest("button, input, a, select, textarea")) return;
+        if (event.key === "Enter") {
+          event.preventDefault();
+          submit();
+        } else if (event.key === "Backspace") {
+          event.preventDefault();
+          press("⌫");
+        } else if (/^\p{L}$/u.test(event.key)) {
+          press(event.key);
+        }
+      });
+      makeBoard();
+      makeKeyboard();
+      renderStats();
+      beginRound(false);
+    })();
+  </script>
+</body>
+</html>
